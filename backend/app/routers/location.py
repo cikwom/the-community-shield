@@ -1,15 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
-
-from app.database import get_db
-from app.schemas.location import LocationCreate, LocationResponse
 from app.services.location_service import (
     create_location,
     get_location,
     update_location,
     delete_location,
+    find_nearby_locations,
 )
-
 
 router = APIRouter(
     prefix="/locations",
@@ -28,6 +23,9 @@ def create_new_location(
         address=location.address,
         latitude=location.latitude,
         longitude=location.longitude,
+        location_type=location.location_type,
+        accuracy_meters=location.accuracy_meters,
+        coordinate_source=location.coordinate_source,
     )
 
 
@@ -41,7 +39,7 @@ def read_location(
     if location is None:
         raise HTTPException(
             status_code=404,
-            detail="Problem with your location input",
+            detail="Location not found",
         )
 
     return location
@@ -65,7 +63,7 @@ def update_existing_location(
     if updated_location is None:
         raise HTTPException(
             status_code=404,
-            detail="Problem with your location input",
+            detail="Location not found",
         )
 
     return updated_location
@@ -84,7 +82,20 @@ def delete_existing_location(
     if deleted_location is None:
         raise HTTPException(
             status_code=404,
-            detail="Problem with your location input",
+            detail="Location not found",
         )
 
     return deleted_location
+@router.get("/nearby", response_model=list[LocationResponse])
+def nearby_locations(
+    latitude: float,
+    longitude: float,
+    radius_km: float = 5,
+    db: Session = Depends(get_db),
+):
+    return find_nearby_locations(
+        db=db,
+        latitude=latitude,
+        longitude=longitude,
+        radius_km=radius_km,
+    )
