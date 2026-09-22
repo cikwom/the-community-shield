@@ -11,44 +11,44 @@ def create_emergency_resource(
     name: str,
     resource_type: str,
     location_id: int,
+    organization_id: int | None = None,
     organization_name: str | None = None,
-) -> EmergencyResource:
+):
     location = db.get(Location, location_id)
 
-    if location is None:
+    if not location:
         raise ValueError("Location not found")
 
-    resource = EmergencyResource(
+    new_resource = EmergencyResource(
         name=name,
         resource_type=resource_type,
         location_id=location_id,
+        organization_id=organization_id,
         organization_name=organization_name,
     )
 
-    db.add(resource)
+    db.add(new_resource)
     db.commit()
-    db.refresh(resource)
+    db.refresh(new_resource)
 
-    return resource
+    return new_resource
 
 
 def get_emergency_resource(
     db: Session,
     resource_id: int,
-) -> EmergencyResource | None:
+):
     return db.get(EmergencyResource, resource_id)
 
 
-def get_emergency_resources(
-    db: Session,
-) -> list[EmergencyResource]:
+def get_emergency_resources(db: Session):
     return db.query(EmergencyResource).all()
 
 
 def get_emergency_resources_by_type(
     db: Session,
     resource_type: str,
-) -> list[EmergencyResource]:
+):
     return (
         db.query(EmergencyResource)
         .filter(EmergencyResource.resource_type == resource_type)
@@ -61,17 +61,18 @@ def find_nearby_emergency_resources(
     latitude: float,
     longitude: float,
     radius_km: float,
-) -> list[EmergencyResource]:
-    locations = db.query(Location).all()
+):
+    resources = db.query(EmergencyResource).all()
 
-    nearby_location_ids = []
+    nearby_resources = []
 
     earth_radius_km = 6371.0
 
-    for location in locations:
+    for resource in resources:
+        location = resource.location
+
         lat1 = radians(latitude)
         lon1 = radians(longitude)
-
         lat2 = radians(location.latitude)
         lon2 = radians(location.longitude)
 
@@ -80,7 +81,9 @@ def find_nearby_emergency_resources(
 
         a = (
             sin(dlat / 2) ** 2
-            + cos(lat1) * cos(lat2) * sin(dlon / 2) ** 2
+            + cos(lat1)
+            * cos(lat2)
+            * sin(dlon / 2) ** 2
         )
 
         c = 2 * atan2(sqrt(a), sqrt(1 - a))
@@ -88,12 +91,6 @@ def find_nearby_emergency_resources(
         distance_km = earth_radius_km * c
 
         if distance_km <= radius_km:
-            nearby_location_ids.append(location.id)
+            nearby_resources.append(resource)
 
-    return (
-        db.query(EmergencyResource)
-        .filter(
-            EmergencyResource.location_id.in_(nearby_location_ids)
-        )
-        .all()
-    )
+    return nearby_resources

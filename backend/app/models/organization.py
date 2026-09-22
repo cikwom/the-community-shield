@@ -1,0 +1,19 @@
+from sqlalchemy import Column, Integer, String
+
+from app.database import Base
+
+
+class Organization(Base):
+    __tablename__ = "organizations"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    name = Column(String, nullable=False)
+
+    organization_type = Column(String, nullable=True)
+
+    description = Column(String, nullable=True)
+
+    contact_phone = Column(String, nullable=True)
+
+    contact_email = Column(String, nullable=True)

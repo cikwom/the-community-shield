@@ -19,6 +19,14 @@ class EmergencyResource(Base):
         nullable=False,
     )
 
+    organization_id = Column(
+        Integer,
+        ForeignKey("organizations.id"),
+        nullable=True,
+    )
+
     organization_name = Column(String, nullable=True)
 
     location = relationship("Location")
+
+    organization = relationship("Organization")
