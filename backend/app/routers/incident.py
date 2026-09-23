@@ -10,7 +10,9 @@ from app.services.incident_service import (
     create_incident,
     get_incident,
     get_incidents,
+    update_incident,
     update_incident_status,
+    delete_incident,
     find_nearby_resources_for_incident,
 )
 
@@ -40,6 +42,30 @@ def get_all_incidents(
     db: Session = Depends(get_db),
 ):
     return get_incidents(db)
+
+
+@router.put(
+    "/{incident_id}",
+    response_model=IncidentResponse,
+)
+def update_existing_incident(
+    incident_id: int,
+    incident: IncidentCreate,
+    db: Session = Depends(get_db),
+):
+    updated_incident = update_incident(
+        db,
+        incident_id,
+        incident,
+    )
+
+    if updated_incident is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Incident not found",
+        )
+
+    return updated_incident
 
 
 @router.get(
@@ -83,6 +109,30 @@ def change_incident_status(
         )
 
     return incident
+
+
+@router.delete(
+    "/{incident_id}",
+)
+def delete_existing_incident(
+    incident_id: int,
+    db: Session = Depends(get_db),
+):
+    deleted = delete_incident(
+        db,
+        incident_id,
+    )
+
+    if not deleted:
+        raise HTTPException(
+            status_code=404,
+            detail="Incident not found",
+        )
+
+    return {
+        "message": "Incident deleted successfully",
+        "incident_id": incident_id,
+    }
 
 
 @router.get(

@@ -42,6 +42,31 @@ def get_incidents(
     return db.query(Incident).all()
 
 
+def update_incident(
+    db: Session,
+    incident_id: int,
+    incident_data: IncidentCreate,
+) -> Incident | None:
+    incident = db.get(Incident, incident_id)
+
+    if incident is None:
+        return None
+
+    incident.title = incident_data.title
+    incident.description = incident_data.description
+    incident.incident_type = incident_data.incident_type
+    incident.severity = incident_data.severity
+    incident.status = incident_data.status
+    incident.location_id = incident_data.location_id
+    incident.reporter_id = incident_data.reporter_id
+    incident.reported_at = incident_data.reported_at
+
+    db.commit()
+    db.refresh(incident)
+
+    return incident
+
+
 def update_incident_status(
     db: Session,
     incident_id: int,
@@ -58,6 +83,21 @@ def update_incident_status(
     db.refresh(incident)
 
     return incident
+
+
+def delete_incident(
+    db: Session,
+    incident_id: int,
+) -> bool:
+    incident = db.get(Incident, incident_id)
+
+    if incident is None:
+        return False
+
+    db.delete(incident)
+    db.commit()
+
+    return True
 
 
 def find_nearby_resources_for_incident(
