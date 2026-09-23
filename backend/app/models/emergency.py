@@ -27,6 +27,11 @@ class EmergencyResource(Base):
 
     organization_name = Column(String, nullable=True)
 
-    location = relationship("Location")
+    location = relationship(
+        "Location",
+        back_populates="emergency_resources"
+    )
 
-    organization = relationship("Organization")
+    organization = relationship(
+        "Organization"
+    )

@@ -80,6 +80,6 @@ class Location(Base):
     )
 
     emergency_resources = relationship(
-        "Emergency",
+        "EmergencyResource",
         back_populates="location"
     )

@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import ForeignKey
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
 
@@ -6,14 +7,38 @@ from app.database import Base
 class Organization(Base):
     __tablename__ = "organizations"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id: Mapped[int] = mapped_column(
+        primary_key=True,
+        index=True
+    )
 
-    name = Column(String, nullable=False)
+    name: Mapped[str] = mapped_column(
+        nullable=False
+    )
 
-    organization_type = Column(String, nullable=True)
+    organization_type: Mapped[str | None] = mapped_column(
+        nullable=True
+    )
 
-    description = Column(String, nullable=True)
+    description: Mapped[str | None] = mapped_column(
+        nullable=True
+    )
 
-    contact_phone = Column(String, nullable=True)
+    contact_phone: Mapped[str | None] = mapped_column(
+        nullable=True
+    )
 
-    contact_email = Column(String, nullable=True)
+    contact_email: Mapped[str | None] = mapped_column(
+        nullable=True
+    )
+
+    location_id: Mapped[int | None] = mapped_column(
+        ForeignKey("locations.id"),
+        nullable=True,
+        index=True
+    )
+
+    location = relationship(
+        "Location",
+        back_populates="organizations"
+    )
