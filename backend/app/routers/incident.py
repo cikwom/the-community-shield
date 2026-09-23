@@ -14,6 +14,7 @@ from app.services.incident_service import (
     update_incident_status,
     delete_incident,
     find_nearby_resources_for_incident,
+    find_nearby_live_locations_for_incident,
 )
 
 
@@ -152,6 +153,29 @@ def get_incident_nearby_resources(
         )
 
     return find_nearby_resources_for_incident(
+        db=db,
+        incident_id=incident_id,
+        radius_km=radius_km,
+    )
+
+
+@router.get(
+    "/{incident_id}/nearby-live-locations",
+)
+def get_incident_nearby_live_locations(
+    incident_id: int,
+    radius_km: float = 5,
+    db: Session = Depends(get_db),
+):
+    incident = get_incident(db, incident_id)
+
+    if incident is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Incident not found",
+        )
+
+    return find_nearby_live_locations_for_incident(
         db=db,
         incident_id=incident_id,
         radius_km=radius_km,

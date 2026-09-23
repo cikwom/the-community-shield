@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 
 from app.models.emergency import EmergencyResource
 from app.models.incident import Incident
+from app.models.live_location import LiveLocation
 from app.schemas.incident import IncidentCreate
 
 
@@ -155,3 +156,55 @@ def find_nearby_resources_for_incident(
             nearby_resources.append(resource)
 
     return nearby_resources
+
+
+def find_nearby_live_locations_for_incident(
+    db: Session,
+    incident_id: int,
+    radius_km: float,
+) -> list[LiveLocation]:
+    incident = db.get(Incident, incident_id)
+
+    if incident is None:
+        return []
+
+    location = incident.location
+
+    if location is None:
+        return []
+
+    live_locations = db.query(LiveLocation).all()
+
+    nearby_locations = []
+
+    earth_radius_km = 6371.0
+
+    for live_location in live_locations:
+        lat1 = radians(location.latitude)
+        lat2 = radians(live_location.latitude)
+
+        delta_lat = radians(
+            live_location.latitude - location.latitude
+        )
+
+        delta_lon = radians(
+            live_location.longitude - location.longitude
+        )
+
+        a = (
+            sin(delta_lat / 2) ** 2
+            + cos(lat1)
+            * cos(lat2)
+            * sin(delta_lon / 2) ** 2
+        )
+
+        distance = (
+            2
+            * earth_radius_km
+            * asin(sqrt(a))
+        )
+
+        if distance <= radius_km:
+            nearby_locations.append(live_location)
+
+    return nearby_locations
