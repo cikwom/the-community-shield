@@ -1,3 +1,5 @@
+from math import radians, sin, cos, sqrt, atan2
+
 from sqlalchemy.orm import Session
 
 from app.models.location import Location
@@ -23,6 +25,7 @@ def create_location(
     db.add(location)
     db.commit()
     db.refresh(location)
+
     return location
 
 
@@ -69,3 +72,42 @@ def delete_location(
     db.commit()
 
     return location
+
+
+def find_nearby_locations(
+    db: Session,
+    latitude: float,
+    longitude: float,
+    radius_km: float,
+) -> list[Location]:
+    validate_coordinates(latitude, longitude)
+
+    locations = db.query(Location).all()
+
+    nearby_locations = []
+
+    earth_radius_km = 6371.0
+
+    for location in locations:
+        lat1 = radians(latitude)
+        lon1 = radians(longitude)
+
+        lat2 = radians(location.latitude)
+        lon2 = radians(location.longitude)
+
+        dlat = lat2 - lat1
+        dlon = lon2 - lon1
+
+        a = (
+            sin(dlat / 2) ** 2
+            + cos(lat1) * cos(lat2) * sin(dlon / 2) ** 2
+        )
+
+        c = 2 * atan2(sqrt(a), sqrt(1 - a))
+
+        distance_km = earth_radius_km * c
+
+        if distance_km <= radius_km:
+            nearby_locations.append(location)
+
+    return nearby_locations

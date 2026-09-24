@@ -8,6 +8,7 @@ from app.services.location_service import (
     get_location,
     update_location,
     delete_location,
+    find_nearby_locations,
 )
 
 
@@ -28,6 +29,21 @@ def create_new_location(
         address=location.address,
         latitude=location.latitude,
         longitude=location.longitude,
+    )
+
+
+@router.get("/nearby", response_model=list[LocationResponse])
+def get_nearby_locations(
+    latitude: float,
+    longitude: float,
+    radius_km: float = 5.0,
+    db: Session = Depends(get_db),
+):
+    return find_nearby_locations(
+        db=db,
+        latitude=latitude,
+        longitude=longitude,
+        radius_km=radius_km,
     )
 
 
